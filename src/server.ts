@@ -1,0 +1,60 @@
+/* eslint-disable no-console */
+import {Server} from "http"
+import mongoose from "mongoose"
+import app from "./app"
+let server: Server
+
+
+const startServer = async() =>{
+    try{
+        await mongoose.connect("mongodb+srv://TypeScript:TypeScript@cluster0.vh6jx.mongodb.net/Digital_Wallet?retryWrites=true&w=majority&appName=Cluster0")
+        console.log("Database collected")
+        server = app.listen("5000", ()=>{
+             console.log(`Example app listening on port 5000`)
+        })
+    }catch(error){
+        console.log(error, "this is server error")
+    }
+}
+
+startServer()
+/**
+ * unhanding rejection error => server theke kono error dile se catch korbe 
+ * uncaught rejection error => amra kono kichu console kortechi but oi ami define ei kori nai tokhon oi error ta ekhane catch hobe
+ * signal termination sigterm => clud peltform theke server off howyar age je signal dibe ta catch korbe
+ */
+
+process.on("SIGTERM",(err)=>{
+    console.log("SIGTERM Signal Rechived Server Shutting Down...", err)
+    if(server){
+        server.close(()=>{
+            process.exit(1)
+        })
+    }
+})
+process.on("SIGINT",(err)=>{
+    console.log("SIGINT Signal Rechived Server Shutting Down...", err)
+    if(server){
+        server.close(()=>{
+            process.exit(1)
+        })
+    }
+})
+
+process.on("unhandledRejection",(err)=>{
+    console.log("Unhandled Rejection Detected, Server Shutting Down...", err)
+    if(server){
+        server.close(()=>{
+            process.exit(1)
+        })
+    }
+})
+
+process.on("uncaughtException",(err)=>{
+    console.log("Uncaught Exception, Server Shutting Down...", err)
+    if(server){
+        server.close(()=>{
+            process.exit(1)
+        })
+    }
+})
