@@ -23,7 +23,6 @@ const userSchema = new Schema<IUser>({
         enum: Object.values(IsActive),
         default: IsActive.ACTIVE,
     },
-
     nidNumber: {
         type: String,
         required: true,
@@ -37,13 +36,17 @@ const userSchema = new Schema<IUser>({
         type: Boolean,
         default: false,
     },
-
     shopName: { type: String },
     approvalStatus: {
         type: String,
-        enum: Object.values(ApprovalStatus)
+        enum: Object.values(ApprovalStatus),
+        default: function(){
+             if (this.role === Role.AGENT) {
+            return ApprovalStatus.PENDING;
+        } 
+        }
     },
-    commissionRate: { type: parent },
+    commissionRate: { type: Number },
     totalCommission: { type: Number },
     employeeId: { type: String },
     designation: { type: String },
