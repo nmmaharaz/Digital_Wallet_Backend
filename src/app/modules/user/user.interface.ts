@@ -1,15 +1,22 @@
 import { Types } from "mongoose";
+import { WalletStatus } from "../wallet/wallet.interface";
 
 export enum Role {
     USER = "USER",
     AGENT = "AGENT",
-    ADMIN = "ADMIN"
+    ADMIN = "ADMIN",
 }
 
 export enum IsActive {
     ACTIVE = "ACTIVE",
     INACTIVE = "INACTIVE",
     BLOCKED = "BLOCKED"
+}
+
+export enum IsVerified {
+    UNVERIFIED = "UNVERIFIED",
+    PENDING = "PENDING",
+    VERIFIED = "VERIFIED"
 }
 
 export enum ApprovalStatus {
@@ -20,6 +27,7 @@ export enum ApprovalStatus {
 
 export enum PermissionLevel {
     SUPER = "SUPER",
+    ADMIN = "ADMIN",
     MANAGER = "MANAGER",
     SUPPORT = "SUPPORT"
 }
@@ -37,15 +45,22 @@ export interface IUser {
     nidNumber: string;
     address: string;
     dateOfBirth: Date;
-    isVerified?: boolean;
+    isVerified?: IsVerified;
 
     shopName?: string;
     approvalStatus?: ApprovalStatus;
     commissionRate?: number;
-    totalCommission?: number; 
+    totalCommission?: number;
 
     employeeId?: string;
     designation?: string;
     permissionLevel?: PermissionLevel
     lastLogin?: Date;
+}
+
+
+export interface IuserBlockUnblock {
+    isActive?: IsActive;
+    status?: WalletStatus;
+    approvalStatus?: ApprovalStatus;
 }

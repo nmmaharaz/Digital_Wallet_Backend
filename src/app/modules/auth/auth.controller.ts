@@ -4,6 +4,10 @@ import catchAsync from "../../utils/catchAsync";
 import { AuthService } from "./auth.service";
 import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status-codes"
+import createAuthToken from "../../utils/JWT/createAuthToken";
+import AppError from "../../errorHelpers/AppError";
+import { User } from "../user/user.model";
+import { IsVerified } from "../user/user.interface";
 
 const authRegister = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const data = await req.body
@@ -14,7 +18,6 @@ const authRegister = catchAsync(async (req: Request, res: Response, next: NextFu
         message: "Auth Created Successfully",
         data: result
     })
-
 })
 
 const authVerify = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -22,11 +25,10 @@ const authVerify = catchAsync(async (req: Request, res: Response, next: NextFunc
     await AuthService.authVerify(phone, otp)
     sendResponse(res, {
         success: true,
-        statusCode: httpStatus.CREATED,
+        statusCode: httpStatus.OK,
         message: "Verifyed Successfully",
         data: null
     })
-
 })
 
 const authLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -34,27 +36,87 @@ const authLogin = catchAsync(async (req: Request, res: Response, next: NextFunct
     await AuthService.authLogin(phone, pin)
     sendResponse(res, {
         success: true,
-        statusCode: httpStatus.CREATED,
+        statusCode: httpStatus.OK,
         message: "Send OTP Successfully",
         data: null
     })
+})
 
+const authLogout = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const token = req.user
+    await User.findByIdAndUpdate(token?.userId, { isVerified: IsVerified.UNVERIFIED }, { new: true })
+
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax"
+    })
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax"
+    })
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "User Logged Out Successfully",
+        data: null
+    })
 })
 
 const authLoginVerify = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { phone, otp } = await req.body
-    const result = await AuthService.authLoginVerify(phone, otp)
+    const auth = await AuthService.authLoginVerify(phone, otp)
+    if (!auth) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Login Failed")
+    }
+    const token = createAuthToken(res, auth)
+    const { pin, ...data } = auth
     sendResponse(res, {
         success: true,
-        statusCode: httpStatus.CREATED,
+        statusCode: httpStatus.OK,
         message: "Login Successfully",
         data: {
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-            data: result.data
+            accessToken: token.accessToken,
+            refreshToken: token.refreshToken,
+            data
         }
     })
+})
 
+const authMe = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const token = req.user
+    const data = await AuthService.authMe(token)
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "User retrieved successfully",
+        data
+    })
+})
+
+const changePin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const token = req.user
+    const { oldPin, newPin, confirmPin } = await req.body
+    const data = await AuthService.changePin(oldPin, newPin, confirmPin, token)
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Change Pin successfully",
+        data
+    })
+})
+
+const forgotPin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { phone } = await req.body
+    await AuthService.forgotPin(phone)
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Forgot Message Send successfully",
+        data: null
+    })
 })
 
 
@@ -62,5 +124,9 @@ export const AuthController = {
     authRegister,
     authVerify,
     authLogin,
-    authLoginVerify
+    authLogout,
+    authLoginVerify,
+    authMe,
+    changePin,
+    forgotPin
 }

@@ -75,3 +75,12 @@ export const VerifyOTPZodSchema = z.object({
     otp: z.string()
         .regex(/^\d{6}$/, { message: "otp must be a 6-digit number" }),
 })
+
+export const changePinZodSchema = z.object({
+    oldPin: z.string()
+        .regex(/^\d{6}$/, { message: "Invaild Old Pin" }),
+    newPin: z.string()
+        .regex(/^\d{6}$/, { message: "New pin must be a 6-digit number" }),
+    confirmPin: z.string()
+        .regex(/^\d{6}$/, { message: "PIN must be a 6-digit number" }),
+})  
