@@ -1,5 +1,5 @@
-import { model, Schema} from "mongoose";
-import { ApprovalStatus, IsActive, IUser, PermissionLevel, Role } from "./user.interface";
+import { model, Schema } from "mongoose";
+import { ApprovalStatus, IsActive, IsVerified, IUser, PermissionLevel, Role } from "./user.interface";
 
 const userSchema = new Schema<IUser>({
     name: { type: String, required: true },
@@ -21,7 +21,7 @@ const userSchema = new Schema<IUser>({
     isActive: {
         type: String,
         enum: Object.values(IsActive),
-        default: IsActive.ACTIVE,
+        default: IsActive.INACTIVE,
     },
     nidNumber: {
         type: String,
@@ -33,17 +33,18 @@ const userSchema = new Schema<IUser>({
     address: { type: String, required: true },
     dateOfBirth: { type: Date, required: true },
     isVerified: {
-        type: Boolean,
-        default: false,
+        type: String,
+        enum: Object.values(IsVerified),
+        default: IsVerified.UNVERIFIED,
     },
     shopName: { type: String },
     approvalStatus: {
         type: String,
         enum: Object.values(ApprovalStatus),
-        default: function(){
-             if (this.role === Role.AGENT) {
-            return ApprovalStatus.PENDING;
-        } 
+        default: function () {
+            if (this.role === Role.AGENT) {
+                return ApprovalStatus.PENDING;
+            }
         }
     },
     commissionRate: { type: Number },

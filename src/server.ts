@@ -4,6 +4,7 @@ import mongoose from "mongoose"
 import app from "./app"
 import { envVars } from "./app/config/env"
 import { connectRedis } from "./app/config/redis.config"
+import { seedAdmin, seedAdminManager, seedAdminSupport, seedSuperAdmin } from "./app/utils/speedAdmin"
 let server: Server
 
 
@@ -21,6 +22,10 @@ const startServer = async () => {
 (async () => {
     await startServer()
     await connectRedis()
+    await seedSuperAdmin()
+    await seedAdmin()
+    await seedAdminManager()
+    await seedAdminSupport()
 })()
 /**
  * unhanding rejection error => server theke kono error dile se catch korbe 

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>User Status Update</title>
+  <style>
+    body { margin:0; font-family: Inter, Arial, sans-serif; background:#f8fbff; color:#1f2d3d; }
+    .container { max-width:600px; margin:40px auto; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 20px rgba(17,24,39,0.08);}
+    .top { padding:36px 40px; text-align:center; }
+    .logo { width:72px; height:72px; margin:0 auto 18px; display:block; }
+    h1 { margin:0 0 8px; font-size:22px; }
+    p.lead { margin:0 0 18px; color:#4b5563; font-size:14px; }
+    .card { border-radius:8px; padding:22px; margin:12px 40px; text-align:center; }
+    .status-text { font-size:18px; font-weight:700; }
+    .muted { font-size:13px; color:#6b7280; margin-top:8px; }
+    .body-text { padding:0 40px 30px 40px; font-size:13px; color:#374151; line-height:1.5; }
+    .btn-wrap { text-align:center; padding-bottom:22px; }
+    .btn { display:inline-block; text-decoration:none; padding:10px 22px; border-radius:8px; color:#fff; font-weight:600; }
+    .footer { background:#07224a; color:#fff; padding:20px 40px; text-align:center; }
+    .brand { font-size:18px; font-weight:700; margin-top:8px; display:flex; gap:8px; align-items:center; justify-content:center; }
+    .small-links { margin-top:10px; font-size:12px; opacity:0.85; }
+    @media (max-width:640px){
+      .container { margin:20px; }
+      .card { margin:12px; }
+      .top, .body-text, .footer { padding-left:18px; padding-right:18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" role="article">
+
+    <!-- TOP SECTION -->
+    <div class="top">
+      <img src="https://nagad.com.bd/_nuxt/img/new-logo.14fe8a5.png" class="logo" alt="logo">
+      
+      <% if (status === "blocked") { %>
+        <h1 style="color:#b91c1c;">Your Account Has Been Blocked</h1>
+      <% } else if (status === "BLOCKED") { %>
+        <h1 style="color:#b91c1c;">Your Wallet Has Been Blocked</h1>
+      <% }else if (status === "SUSPENDED") { %>
+        <h1 style="color:#b91c1c;">Your Account Has Been Suspended</h1>
+      <% } else if (status === "INACTIVE") { %>
+        <h1 style="color:#c17d06a2;">Your Account Has Been InActive</h1>
+      <% } else if (status === "APPROVED") { %>
+        <h1 style="color:#065f46;">Your Account Has Been Approved</h1>
+      <% } else { %>
+        <h1 style="color:#065f46;">Your Account Has Been Unblocked</h1>
+      <% } %>
+
+      <p class="lead">Hello <strong><%= name %></strong>,</p>
+
+      <% if (status === "blocked") { %>
+        <p class="lead">Your account has been temporarily blocked by the admin.</p>
+      <% } else { %>
+        <p class="lead">Good news! Your account is active again.</p>
+      <% } %>
+    </div>
+
+    <!-- STATUS CARD -->
+    <div 
+      class="card" 
+      style="<%= status === 'blocked' || status === 'BLOCKED' ? 'background:#ffe6e6;' : 'background:#e6fffa;' %>"
+    >
+      <div 
+        class="status-text" 
+        style="<%= status === 'blocked' || status === 'BLOCKED' ? 'color:#b91c1c;' : 'color:#047857;' %>"
+      >
+        Status: <%= status.toUpperCase() %>
+      </div>
+
+      <% if (status === "blocked") { %>
+        <p class="muted">Reason: <%= reason %></p>
+      <% } else { %>
+        <p class="muted">You can now log in and access your account normally.</p>
+      <% } %>
+    </div>
+
+    <!-- BODY TEXT -->
+    <div class="body-text">
+      <% if (status === "blocked") { %>
+        <p>Your access is restricted temporarily. If you believe this is a mistake, you may submit a request to restore your account.</p>
+      <% } else { %>
+        <p>Your account is fully active again. Please follow our guidelines to avoid future interruptions.</p>
+      <% } %>
+    </div>
+
+    <!-- BUTTON -->
+    <div class="btn-wrap">
+
+      <% if (status === "blocked") { %>
+        <a href="<%= link %>" class="btn" style="background:#dc2626;">
+          Request Unblock
+        </a>
+      <% } else { %>
+        <a href="<%= link %>" class="btn" style="background:#059669;">
+          Login Now
+        </a>
+      <% } %>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L3 7v6c0 5 5 9 9 9s9-4 9-9V7l-9-5z" fill="#60a5fa"/>
+        </svg>
+        <span>Fin Flow</span>
+      </div>
+      <div class="small-links">Privacy Policy &nbsp; • &nbsp; Support</div>
+    </div>
+
+  </div>
+
+</body>
+</html>
