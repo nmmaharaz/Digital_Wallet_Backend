@@ -19,7 +19,7 @@ const getAllTransactions = catchAsync(async(req: Request, res: Response, next: N
        })
 })
 
-
+// get logged in user transaction
 const getMeTransaction = catchAsync(async(req: Request, res: Response, next: NextFunction)=>{
     const token = req.user as JwtPayload
     if (!token) {
