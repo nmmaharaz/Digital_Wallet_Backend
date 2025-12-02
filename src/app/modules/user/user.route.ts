@@ -4,7 +4,7 @@ import { Role } from "./user.interface";
 import { UserController } from "./user.controller";
 import validationRequest from "../../middlewares/validationRequest";
 import { userBlockUnblockZodSchema, userUpdateProfileZodSchema } from "./user.validation";
-// import { createTransactionZodShema } from "../transaction/transaction.validation";
+import { createTransactionZodShema, tranferVerifyZodSchema } from "../transaction/transaction.validation";
 
 const router = Router()
 
@@ -14,6 +14,11 @@ router.patch("/:id/block", checkAuth(Role.ADMIN), validationRequest(userBlockUnb
 router.patch("/update-profile", checkAuth(...Object.values(Role)), validationRequest(userUpdateProfileZodSchema), UserController.userUpdateProfile)
 
 //Send Money 
+router.post("/send-money", checkAuth(Role.USER), validationRequest(createTransactionZodShema), UserController.sendMoney)
+router.post("/send-money/verify", checkAuth(Role.USER), validationRequest(tranferVerifyZodSchema), UserController.sendMoneyVerify)
 
+//whithdraw Money
+router.post("/withdraw", checkAuth(Role.USER), validationRequest(createTransactionZodShema), UserController.withdrawMoney)
+router.post("/withdraw/verify", checkAuth(Role.USER), validationRequest(tranferVerifyZodSchema), UserController.withdrawVerify)
 
 export const UserRoute = router

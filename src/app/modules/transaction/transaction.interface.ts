@@ -1,30 +1,32 @@
 import { Types } from "mongoose";
 
-export enum ITransactionType {
+export enum TransactionType {
     add_money = "add_money",
     withdraw = "withdraw",
-    send_money = "send_money"
+    send_money = "send_money",
+    cash_in = "cash_in"
 }
-export enum ITransactionStatus {
+export enum TransactionStatus {
     pending = "pending",
     completed = "completed",
     failed = "failed"
 }
-export enum ITransactionMethod {
+export enum TransactionMethod {
     bank = "bank",
     card = "card",
 }
 
 
 export interface ITransaction extends Document {
-    user: Types.ObjectId;
-    type: ITransactionType;
+    user?: Types.ObjectId;
+    type: TransactionType;
     amount: number;
-    status: ITransactionStatus;
+    status?: TransactionStatus;
     from?: Types.ObjectId;
-    to?: Types.ObjectId;
-    method?: ITransactionMethod;
+    to: Types.ObjectId;
+    method?: TransactionMethod;
     note?: string;
+    transactionId?: string;
     createdAt: Date;
     updatedAt: Date;
 }
