@@ -1,12 +1,18 @@
+import { Types } from "mongoose"
 import { userSecarchableFields } from "../../../contant"
 import sendEmail from "../../config/nodeMailer"
 import AppError from "../../errorHelpers/AppError"
 import { QueryBuilder } from "../../utils/QueryBuilder"
-import { IWallet } from "../wallet/wallet.interface"
+import { ITransaction, TransactionStatus } from "../transaction/transaction.interface"
+import { WalletStatus } from "../wallet/wallet.interface"
 import { Wallet } from "../wallet/wallet.model"
-import { IUser, IuserBlockUnblock, Role } from "./user.interface"
+import { IsendMoneyVerify, IUser, IuserBlockUnblock, Role } from "./user.interface"
 import { User } from "./user.model"
 import httpStatus from "http-status-codes"
+import { Transaction } from "../transaction/transaction.model"
+import { format } from "date-fns"
+import { transferValidation } from "../../utils/transfer.validation"
+import { transferVerify } from "../../utils/transferVerify.validation"
 
 const getAllUsers = async (query: Record<string, string>) => {
 
@@ -65,9 +71,6 @@ const userBlockUnblock = async (id: string, body: IuserBlockUnblock) => {
         finalStatus = body.status
     }
 
-
-
-
     sendEmail({
         to: email,
         subject: "User varification",
@@ -82,17 +85,176 @@ const userBlockUnblock = async (id: string, body: IuserBlockUnblock) => {
 }
 
 
-
-
 const userUpdateProfile = async (id: string, body: Partial<IUser>) => {
     const data = await User.findByIdAndUpdate(id, body, { new: true, runValidators: true })
 
     return data
 }
 
+
+// Send Money
+const sendMoney = async (id: Types.ObjectId, body: ITransaction, to: IUser & {
+    wallet: {
+        status: WalletStatus;
+    }
+}) => {
+    const data = await transferValidation(id, body, to)
+    return data
+}
+
+
+const sendMoneyVerify = async (id: Types.ObjectId, body: IsendMoneyVerify) => {
+    const session = await Transaction.startSession()
+    session.startTransaction()
+
+    try {
+        const { transaction, to, user } = await transferVerify(id, body)
+
+        const result = await Transaction.findByIdAndUpdate(body.id, { status: TransactionStatus.completed }, { new: true, runValidators: true, session })
+
+        const fromPayload = {
+            balance: transaction.from.balance - transaction.amount,
+            totalSent: transaction.from.totalSent as number + transaction.amount,
+            lastTransactionAt: new Date()
+        }
+        await Wallet.findByIdAndUpdate(
+            transaction.from._id,
+            fromPayload,
+            {
+                runValidators: true,
+                session
+            }
+        )
+
+
+        const toPayload = {
+            balance: transaction.to.balance + transaction.amount,
+            totalReceived: transaction.to.totalReceived as number + transaction.amount,
+            lastTransactionAt: new Date()
+        }
+
+        await Wallet.findByIdAndUpdate(
+            transaction.to._id,
+            toPayload,
+            {
+                runValidators: true,
+                session
+            }
+        )
+
+        await session.commitTransaction()
+        session.endSession()
+
+        sendEmail({
+            to: to.email,
+            subject: "Payment Received Successfully",
+            templateName: "sendMoney",
+            templateData: {
+                recipientName: to.name,
+                senderName: user.name,
+                amount: transaction.amount,
+                currency: "BDT",
+                transactionId: transaction.transactionId,
+                date: format(transaction.updatedAt, "PPpp"),
+                note: "For dinner",
+                accountUrl: "https://yourapp.com/account/transactions"
+            }
+        })
+
+        return result
+    } catch (error) {
+        session.abortTransaction()
+        session.endSession()
+        await Transaction.findByIdAndUpdate(body.id, { status: TransactionStatus.failed }, { new: true, runValidators: true })
+        throw error
+    }
+}
+
+// Withdraw Money
+const withdrawMoney = async (id: Types.ObjectId, body: ITransaction, to: IUser & {
+    wallet: {
+        status: WalletStatus;
+    }
+}) => {
+    const data = await transferValidation(id, body, to)
+    return data
+}
+
+const withdrawVerify = async (id: Types.ObjectId, body: IsendMoneyVerify) => {
+    const session = await Transaction.startSession()
+    session.startTransaction()
+
+    try {
+        const { transaction, to, user } = await transferVerify(id, body)
+
+        const result = await Transaction.findByIdAndUpdate(body.id, { status: TransactionStatus.completed }, { new: true, runValidators: true, session })
+
+        const fromPayload = {
+            balance: transaction.from.balance - transaction.amount,
+            totalWithdrawn: transaction.from.totalWithdrawn as number + transaction.amount,
+            lastTransactionAt: new Date()
+        }
+        await Wallet.findByIdAndUpdate(
+            transaction.from._id,
+            fromPayload,
+            {
+                runValidators: true,
+                session
+            }
+        )
+
+
+        const toPayload = {
+            balance: transaction.to.balance + transaction.amount,
+            totalReceived: transaction.to.totalReceived as number + transaction.amount,
+            totalCommissionEarned: (transaction.to.commissionRate as number * transaction.amount) / 100,
+            lastTransactionAt: new Date()
+        }
+
+        await Wallet.findByIdAndUpdate(
+            transaction.to._id,
+            toPayload,
+            {
+                runValidators: true,
+                session
+            }
+        )
+
+        await session.commitTransaction()
+        session.endSession()
+
+        sendEmail({
+            to: to.email,
+            subject: "Payment Received Successfully",
+            templateName: "sendMoney",
+            templateData: {
+                recipientName: to.name,
+                senderName: user.name,
+                amount: transaction.amount,
+                currency: "BDT",
+                transactionId: transaction.transactionId,
+                date: format(transaction.updatedAt, "PPpp"),
+                note: "For dinner",
+                accountUrl: "https://yourapp.com/account/transactions"
+            }
+        })
+
+        return result
+    } catch (error) {
+        session.abortTransaction()
+        session.endSession()
+        await Transaction.findByIdAndUpdate(body.id, { status: TransactionStatus.failed }, { new: true, runValidators: true })
+        throw error
+    }
+}
+
 export const UserService = {
     getAllUsers,
     getSingleUsers,
     userBlockUnblock,
-    userUpdateProfile
+    userUpdateProfile,
+    sendMoney,
+    sendMoneyVerify,
+    withdrawVerify,
+    withdrawMoney
 }

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Money Received — Payment Notification</title>
+  <style>
+    /* Basic reset */
+    body { margin:0; font-family: Inter, 'Helvetica Neue', Arial, sans-serif; background:#f8fbff; color:#1f2d3d; }
+    .container { max-width:640px; margin:36px auto; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 20px rgba(17,24,39,0.08);}
+    .top { padding:34px 40px; text-align:center; }
+    .logo { width:72px; height:72px; margin:0 auto 18px; display:block; }
+    h1 { margin:0 0 6px; font-size:20px; color:#073b66; }
+    p.lead { margin:0 0 12px; color:#4b5563; font-size:14px; }
+    .card { background:#e6f9ef; border-radius:8px; padding:20px; margin:12px 40px; text-align:center; }
+    .amount { font-size:28px; letter-spacing:1px; font-weight:800; color:#057a55; }
+    .meta { font-size:13px; color:#374151; margin-top:8px; }
+    .body-text { padding:0 40px 28px 40px; font-size:13px; color:#374151; line-height:1.5; }
+    .details { background:#f8fafc; border-radius:8px; padding:12px 16px; margin:12px 40px; font-size:13px; color:#374151; }
+    .detail-row { display:flex; justify-content:space-between; padding:6px 0; }
+    .btn-wrap { text-align:center; padding-bottom:22px; }
+    .btn { display:inline-block; text-decoration:none; padding:10px 22px; border-radius:8px; background:#1181e6; color:#fff; font-weight:600; }
+    .footer { background:#07224a; color:#fff; padding:18px 40px; text-align:center; }
+    .brand { font-size:18px; font-weight:700; margin-top:8px; display:flex; gap:8px; align-items:center; justify-content:center; }
+    .small-links { margin-top:10px; font-size:12px; opacity:0.85; }
+    @media (max-width:640px){
+      .container { margin:20px; }
+      .card, .details { margin:12px; }
+      .top, .body-text, .footer { padding-left:18px; padding-right:18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="article" aria-label="Payment received notification">
+    <div class="top">
+      <img src="https://nagad.com.bd/_nuxt/img/new-logo.14fe8a5.png" alt="brand logo" class="logo" />
+      <h1>Money Successfully Received</h1>
+      <p class="lead">Dear <strong><%= recipientName %></strong>,</p>
+      <p class="lead" style="font-weight:400">You have received a successful payment. The transaction details are shown below.</p>
+    </div>
+
+    <div class="card" role="region" aria-label="amount card">
+      <div class="amount"><%= currency %> <%= amount %></div>
+      <div class="meta">Sender: <strong><%= senderName %></strong></div>
+    </div>
+
+    <div class="details" role="table" aria-label="transaction details">
+      <div class="detail-row"><div>Transaction ID: </div><div><code><%= transactionId %></code></div></div>
+      <div class="detail-row"><div>Date & Time: </div><div><%= date %></div></div>
+      <div class="detail-row"><div>Message: </div><div><%= note || 'No note provided' %></div></div>
+    </div>
+
+    <div class="body-text">
+      <p>The specified amount has been added to your account. If you do not recognize this transaction or notice any unauthorized activity, please contact our support team immediately.</p>
+      <p>You may review this transaction, request a refund, or file a report by logging into your account.</p>
+    </div>
+
+    <div class="btn-wrap">
+      <a class="btn" href="<%= accountUrl %>">View Transaction</a>
+    </div>
+
+    <div class="footer">
+      <div class="brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2L3 7v6c0 5 5 9 9 9s9-4 9-9V7l-9-5z" fill="#60a5fa"/>
+        </svg>
+        <span>Fin Flow</span>
+      </div>
+      <div class="small-links">Privacy Policy &nbsp; • &nbsp; Contact Us &nbsp; • &nbsp; Unsubscribe</div>
+    </div>
+  </div>
+</body>
+</html>

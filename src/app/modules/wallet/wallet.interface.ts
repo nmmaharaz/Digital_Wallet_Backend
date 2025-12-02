@@ -7,6 +7,7 @@ export enum WalletStatus {
 }
 
 export interface IWallet {
+  _id?: Types.ObjectId;
   user: Types.ObjectId;
   balance: number;
   status: WalletStatus;
@@ -22,6 +23,7 @@ export interface IWallet {
 
   totalCashIn?: number;
   totalCashOut?: number;
+  commissionRate?: number;
   totalCommissionEarned?: number;
 }
 

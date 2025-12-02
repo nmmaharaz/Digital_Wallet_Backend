@@ -49,7 +49,6 @@ export interface IUser {
 
     shopName?: string;
     approvalStatus?: ApprovalStatus;
-    commissionRate?: number;
     totalCommission?: number;
 
     employeeId?: string;
@@ -64,3 +63,15 @@ export interface IuserBlockUnblock {
     status?: WalletStatus;
     approvalStatus?: ApprovalStatus;
 }
+
+export interface IsendMoneyVerify {
+    id: string,
+    pin: string
+}
+
+
+export type IUserWithWalletStatus = IUser & {
+    wallet: {
+        status: WalletStatus;
+    };
+};

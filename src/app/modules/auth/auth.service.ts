@@ -39,7 +39,8 @@ const authVerify = async (phone: string, otp: string) => {
 
     const walletData = {
         user: authExist?._id,
-        lastTransactionAt: new Date()
+        lastTransactionAt: new Date(),
+        commissionRate: authExist.role === Role.AGENT ? 10 : 0
     }
     
     const wallet = await Wallet.create(walletData)
@@ -48,7 +49,6 @@ const authVerify = async (phone: string, otp: string) => {
 }
 
 const authLogin = async (phone: string, pin: string) => {
-    console.log("jdsklfjd")
     const authExist = await checkActiveValidationStatus(phone)
 
     const isExistPin = await bcrypt.compare(pin, authExist.pin)

@@ -47,7 +47,6 @@ const userSchema = new Schema<IUser>({
             }
         }
     },
-    commissionRate: { type: Number },
     totalCommission: { type: Number },
     employeeId: { type: String },
     designation: { type: String },
@@ -56,7 +55,7 @@ const userSchema = new Schema<IUser>({
         enum: Object.values(PermissionLevel),
     },
     lastLogin: { type: Date },
-})
+},{timestamps: true, versionKey: false})
 
 
 export const User = model<IUser>("User", userSchema) 

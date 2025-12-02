@@ -28,9 +28,10 @@ const walletSchema = new Schema<IWallet>(
 
     totalCashIn: { type: Number, default: 0 },
     totalCashOut: { type: Number, default: 0 },
+    commissionRate: { type: Number, default: 0 },
     totalCommissionEarned: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true, versionKey: false }
 );
 
 export const Wallet = model<IWallet>('Wallet', walletSchema);
