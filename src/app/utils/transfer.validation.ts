@@ -37,7 +37,9 @@ export const transferValidation = async (id: Types.ObjectId, body: ITransaction,
     body.from = from.wallet._id
     body.user = id
     body.transactionId = getTransactionId()
-
+    console.log(body);
+    console.log(id)
+    console.log(from.wallet._id)
     const transaction = await Transaction.create(body)
     return transaction
 }
