@@ -4,10 +4,11 @@ import validationRequest from "../../middlewares/validationRequest";
 import { authLoginZodSchema, changePinZodSchema, registerAuthZodSchema, VerifyOTPZodSchema } from "./auth.validation";
 import checkAuth from "../../config/checkAuth";
 import { Role } from "../user/user.interface";
+import { multerUpload } from "../../config/multer.config";
 
 const router = Router()
 
-router.post("/register", validationRequest(registerAuthZodSchema), AuthController.authRegister)
+router.post("/register", multerUpload.single("file"), validationRequest(registerAuthZodSchema), AuthController.authRegister)
 router.post("/verify", validationRequest(VerifyOTPZodSchema), AuthController.authVerify)
 router.post("/login", validationRequest(authLoginZodSchema), AuthController.authLogin)
 router.post("/login/verify", validationRequest(VerifyOTPZodSchema), AuthController.authLoginVerify)

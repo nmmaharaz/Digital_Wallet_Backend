@@ -34,8 +34,22 @@ const getMeTransaction = catchAsync(async(req: Request, res: Response, next: Nex
     })
 })
 
+const createTransaction = catchAsync(async(req: Request, res: Response, next: NextFunction)=>{
+    const file = req.file
+    // eslint-disable-next-line no-console
+    console.log("file", file?.path)
+
+    // const wallet = await TransactionService.getMeTransaction(token.userId)
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "createTransaction fetched successfully",
+        data: null
+    })
+})
 
 export const TransactionController = {
     getAllTransactions,
-    getMeTransaction
+    getMeTransaction,
+    createTransaction
 }

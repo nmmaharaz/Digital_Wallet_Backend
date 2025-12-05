@@ -39,6 +39,7 @@ export interface IUser {
     phone: string;
     pin: string;
     role: Role;
+    photo?: string;
     wallet?: Types.ObjectId;
 
     isActive?: IsActive;
