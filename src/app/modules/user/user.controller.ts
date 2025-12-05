@@ -9,6 +9,7 @@ import { User } from "./user.model";
 import { JwtPayload } from "jsonwebtoken";
 import { IUser, PermissionLevel, Role } from "./user.interface";
 import { WalletStatus } from "../wallet/wallet.interface";
+import { envVars } from "../../config/env";
 
 const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const user = await UserService.getAllUsers(req.query as Record<string, string>)
@@ -68,7 +69,11 @@ const userUpdateProfile = catchAsync(async (req: Request, res: Response, next: N
         throw new AppError(httpStatus.UNAUTHORIZED, "User can not authorized")
     }
     const body = req.body
-    await UserService.userUpdateProfile(token.userId, body)
+    const payload ={
+        ...body,
+        photo: req.file?.path
+    }
+    await UserService.userUpdateProfile(token.userId, payload)
 
     sendResponse(res, {
         success: true,
@@ -158,6 +163,42 @@ const withdrawVerify = catchAsync(async (req: Request, res: Response, next: Next
     })
 })
 
+// Add Money
+const addMoney = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const {amount} = req.body
+    const token = req.user as JwtPayload
+    if (!token) {
+        throw new AppError(httpStatus.UNAUTHORIZED, "User can not authorized")
+    }
+    const data = await UserService.addMoney(token.userId, amount)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Card to Wallet",
+        data,
+    })
+})
+const successMoney = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const result = await UserService.successMoney(req.query as Record<string, string>);
+    if (result.success) {
+        res.redirect(`${envVars.SSL.SSL_SUCCESS_FRONTEND_URL}?transactionId=${req.query.transactionId}&message=${result.message}&amount=${req.query.amount}&status=${req.query.status}`)
+    }
+})
+
+const failMoney = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const result = await UserService.failMoney(req.query as Record<string, string>);
+    if (!result.success) {
+        res.redirect(`${envVars.SSL.SSL_FAIL_FRONTEND_URL}?transactionId=${req.query.transactionId}&message=${result.message}&amount=${req.query.amount}&status=${req.query.status}`)
+    }
+})
+const cancelMoney = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const result = await UserService.cancelMoney(req.query as Record<string, string>);
+    if (!result.success) {
+        res.redirect(`${envVars.SSL.SSL_CANCEL_FRONTEND_URL}?transactionId=${req.query.transactionId}&message=${result.message}&amount=${req.query.amount}&status=${req.query.status}`)
+    }
+})
+
 export const UserController = {
     getAllUsers,
     getSingleUsers,
@@ -166,5 +207,10 @@ export const UserController = {
     sendMoney,
     sendMoneyVerify,
     withdrawMoney,
-    withdrawVerify
+    withdrawVerify,
+    addMoney,
+    successMoney,
+    failMoney,
+    cancelMoney
+
 }

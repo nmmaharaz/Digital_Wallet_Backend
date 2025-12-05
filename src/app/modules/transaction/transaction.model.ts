@@ -14,7 +14,7 @@ const transactionShema = new Schema<ITransaction>({
         default: TransactionStatus.pending
     },
     from: { type: Schema.Types.ObjectId, ref: "Wallet", required: true },
-    to: { type: Schema.Types.ObjectId, ref: "Wallet", required: true },
+    to: { type: Schema.Types.ObjectId, ref: "Wallet" },
     method: {
         type: String,
         enum: Object.values(TransactionMethod)

@@ -9,6 +9,7 @@ export enum TransactionType {
 export enum TransactionStatus {
     pending = "pending",
     completed = "completed",
+    canceled = "canceled",
     failed = "failed"
 }
 export enum TransactionMethod {

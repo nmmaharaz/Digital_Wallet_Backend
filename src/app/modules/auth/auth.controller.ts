@@ -10,8 +10,12 @@ import { User } from "../user/user.model";
 import { IsVerified } from "../user/user.interface";
 
 const authRegister = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const data = await req.body
-    const result = await AuthService.authRegister(data)
+    const body =await req.body
+    const payload ={
+        ...body,
+        photo: req.file?.path
+    }
+    const result = await AuthService.authRegister(payload)
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.CREATED,

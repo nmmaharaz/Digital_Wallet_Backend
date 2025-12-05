@@ -3,7 +3,7 @@ import { userSecarchableFields } from "../../../contant"
 import sendEmail from "../../config/nodeMailer"
 import AppError from "../../errorHelpers/AppError"
 import { QueryBuilder } from "../../utils/QueryBuilder"
-import { ITransaction, TransactionStatus } from "../transaction/transaction.interface"
+import { ITransaction, TransactionMethod, TransactionStatus, TransactionType } from "../transaction/transaction.interface"
 import { WalletStatus } from "../wallet/wallet.interface"
 import { Wallet } from "../wallet/wallet.model"
 import { IsendMoneyVerify, IUser, IuserBlockUnblock, Role } from "./user.interface"
@@ -13,6 +13,9 @@ import { Transaction } from "../transaction/transaction.model"
 import { format } from "date-fns"
 import { transferValidation } from "../../utils/transfer.validation"
 import { transferVerify } from "../../utils/transferVerify.validation"
+import { ISSLCommerz } from "../../sslCommerz/sslCommerz.interface"
+import { getTransactionId } from "../../utils/getTransactionId"
+import { sslCommerzService } from "../../sslCommerz/sslCommerz.service"
 
 const getAllUsers = async (query: Record<string, string>) => {
 
@@ -62,7 +65,6 @@ const userBlockUnblock = async (id: string, body: IuserBlockUnblock) => {
         finalStatus = body.approvalStatus
     }
     if (body.status !== undefined) {
-        console.log("mama aschila")
         const wallet = await Wallet.findByIdAndUpdate(id, { status: body.status }, { new: true, runValidators: true }).populate<{ user: { email: string } }>("user", "email -_id")
         if (!wallet) {
             throw new AppError(httpStatus.BAD_REQUEST, "Something went wrong");
@@ -248,6 +250,126 @@ const withdrawVerify = async (id: Types.ObjectId, body: IsendMoneyVerify) => {
     }
 }
 
+const addMoney = async (id: Types.ObjectId, amount: string) => {
+    const user = await User.findById(id)
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, "User not found")
+    }
+    const addMoneyPayload: ISSLCommerz = {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+        amount: parseFloat(amount),
+        transactionId: getTransactionId()
+    }
+
+    const payment = await sslCommerzService.sslPaymentInit(addMoneyPayload)
+
+
+    const transactionPayload: Partial<ITransaction> = {
+        user: user.wallet,
+        type: TransactionType.add_money,
+        amount: addMoneyPayload.amount,
+        from: user.wallet,
+        transactionId: addMoneyPayload.transactionId,
+        method: TransactionMethod.card
+    }
+    const data = await Transaction.create(transactionPayload)
+
+    return {
+        payment: payment,
+        data
+    }
+}
+
+const successMoney = async (query: Record<string, string>) => {
+    const session = await Wallet.startSession()
+    session.startTransaction()
+    try {
+        const updateTransaction = await Transaction.findOneAndUpdate(
+            { transactionId: query.transactionId },
+            { status: TransactionStatus.completed },
+            { new: true, runValidators: true, session: session }).populate<{ from: { _id: string, balance: number, totalAdded: number } }>("from", "balance totalAdded _id")
+        if (!updateTransaction) {
+            throw new AppError(httpStatus.BAD_REQUEST, "Payment not found")
+        }
+
+        const wallletPayload = {
+            balance: updateTransaction.from.balance + updateTransaction.amount,
+            totalAdded: updateTransaction.from.totalAdded + updateTransaction.amount,
+            lastTransactionAt: new Date()
+        }
+
+
+        const updateWallet = await Wallet.findByIdAndUpdate(
+            updateTransaction.from._id,
+            wallletPayload,
+            { runValidators: true, session: session }
+        ).populate<{ user: { name: string, email: string } }>("user", "name email")
+
+        if (!updateWallet) {
+            throw new AppError(httpStatus.BAD_REQUEST, "Booking not found")
+        }
+
+        // const invoiceData: IInvoiceData = {
+        //     userName: (updateBooking.user as unknown as IUser).name,
+        //     tourTitle: (updateBooking.tour as unknown as ITour).title,
+        //     transactionId: updatedPayment.transactionId,
+        //     bookingDate: updateBooking.createdAt as Date,
+        //     guestCount: updateBooking.guestCount,
+        //     totalAmount: updatedPayment.amount
+        // }
+        // const pdfBuffer = await generatePdf(invoiceData)
+        // const cloudinaryRequest = await uploadBufferToCloudinary(pdfBuffer, "invoice")
+        // if(!cloudinaryRequest){
+        //     throw new AppError(401, "Error uploading pdf")
+        // }
+        // await Payment.findByIdAndUpdate(updatedPayment._id, { invoiceUrl: cloudinaryRequest.secure_url }, {runValidators: true, session})
+
+        await sendEmail({
+            to: updateWallet.user.email,
+            subject: "Money Added Successfully",
+            templateName: "sendMoney",
+            templateData: {
+                recipientName: updateWallet.user.email,
+                senderName: updateWallet.user.email,
+                amount: updateTransaction.amount,
+                currency: "BDT",
+                transactionId: updateTransaction.transactionId,
+                date: format(updateTransaction.updatedAt, "PPpp"),
+                note: "For added money to wallet",
+                accountUrl: "https://yourapp.com/account/transactions"
+            }
+        })
+
+        await session.commitTransaction()
+        session.endSession()
+        return { success: true, message: "Payment Completed Successfully" }
+
+    } catch (err) {
+        await session.abortTransaction()
+        session.endSession()
+        throw err
+    }
+}
+
+const failMoney = async (query: Record<string, string>) => {
+    await Transaction.findOneAndUpdate(
+        { transactionId: query.transactionId },
+        { status: TransactionStatus.failed },
+        { new: true, runValidators: true })
+    return { success: false, message: "Payment Failed" }
+}
+
+const cancelMoney = async (query: Record<string, string>) => {
+    await Transaction.findOneAndUpdate(
+        { transactionId: query.transactionId },
+        { status: TransactionStatus.canceled },
+        { new: true, runValidators: true })
+    return { success: false, message: "Payment Canceled" }
+}
+
 export const UserService = {
     getAllUsers,
     getSingleUsers,
@@ -256,5 +378,9 @@ export const UserService = {
     sendMoney,
     sendMoneyVerify,
     withdrawVerify,
-    withdrawMoney
+    withdrawMoney,
+    addMoney,
+    successMoney,
+    failMoney,
+    cancelMoney
 }

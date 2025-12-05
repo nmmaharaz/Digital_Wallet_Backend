@@ -15,7 +15,7 @@ export const registerAuthZodSchema = z.object({
     //     enum: Object.values(IsActive),
     //     default: IsActive.ACTIVE,
     // },
-
+    photo: z.string().optional(),
     nidNumber: z
         .string()
         .trim()

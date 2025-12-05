@@ -10,6 +10,7 @@ const userSchema = new Schema<IUser>({
         unique: true,
         match: [/^(?:\+88)?01[3-9]\d{8}$/, "Invalid Bangladeshi phone number"],
     },
+    photo: {type: String, default: "https://i.pinimg.com/736x/9e/83/75/9e837528f01cf3f42119c5aeeed1b336.jpg"},
     pin: { type: String, required: true, trim: true },
     role: {
         type: String,
